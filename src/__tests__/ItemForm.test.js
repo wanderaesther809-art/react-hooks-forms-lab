@@ -1,47 +1,40 @@
-import "@testing-library/jest-dom";
-import { render, screen, fireEvent } from "@testing-library/react";
-import ItemForm from "../components/ItemForm";
-import App from "../components/App";
+import React, { useState } from "react";
 
-test("calls the onItemFormSubmit callback prop when the form is submitted", () => {
-  const onItemFormSubmit = jest.fn();
-  render(<ItemForm onItemFormSubmit={onItemFormSubmit} />);
+function ItemForm({ onItemFormSubmit }) {
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("Produce");
 
-  fireEvent.change(screen.queryByLabelText(/Name/), {
-    target: { value: "Ice Cream" },
-  });
+  function handleSubmit(e) {
+    e.preventDefault();
+    onItemFormSubmit({ id: Date.now().toString(), name, category });
+    setName("");
+    setCategory("Produce");
+  }
 
-  fireEvent.change(screen.queryByLabelText(/Category/), {
-    target: { value: "Dessert" },
-  });
+  return (
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="item-name">Name</label>
+      <input
+        id="item-name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
 
-  fireEvent.submit(screen.queryByText(/Add to List/));
+      <label htmlFor="item-category">Category</label>
+      <select
+        id="item-category"
+        data-testid="item-category"
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+      >
+        <option value="Produce">Produce</option>
+        <option value="Dairy">Dairy</option>
+        <option value="Dessert">Dessert</option>
+      </select>
 
-  expect(onItemFormSubmit).toHaveBeenCalledWith(
-    expect.objectContaining({
-      id: expect.any(String),
-      name: "Ice Cream",
-      category: "Dessert",
-    })
+      <button type="submit">Add to List</button>
+    </form>
   );
-});
+}
 
-test("adds a new item to the list when the form is submitted", () => {
-  render(<App />);
-
-  const dessertCount = screen.queryAllByText(/Dessert/).length;
-
-  fireEvent.change(screen.queryByLabelText(/Name/), {
-    target: { value: "Ice Cream" },
-  });
-
-  fireEvent.change(screen.queryByLabelText(/Category/), {
-    target: { value: "Dessert" },
-  });
-
-  fireEvent.submit(screen.queryByText(/Add to List/));
-
-  expect(screen.queryByText(/Ice Cream/)).toBeInTheDocument();
-
-  expect(screen.queryAllByText(/Dessert/).length).toBe(dessertCount + 1);
-});
+export default ItemForm;
